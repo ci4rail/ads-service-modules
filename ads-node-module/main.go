@@ -48,12 +48,7 @@ func main() {
 		log.Printf("Info: env UPDATE_INTERVAL_MS. Using default %d\n", updateIntervalMs)
 	}
 
-	connectionString := os.Getenv("IOTHUB_DEVICE_CONNECTION_STRING")
-	if connectionString == "" {
-		log.Fatal("Error: env IOTHUB_DEVICE_CONNECTION_STRING missing")
-	}
-
-	c, err := iotdevice.NewFromConnectionString(iotmqtt.New(), connectionString)
+	c, err := iotdevice.NewModuleFromEnvironment(iotmqtt.New(), true)
 	if err != nil {
 		log.Fatal(err)
 	}
