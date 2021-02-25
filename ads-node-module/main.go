@@ -21,6 +21,7 @@ import (
 	"ads-node-module/internal/message/version"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -48,7 +49,7 @@ func main() {
 		log.Printf("Info: env UPDATE_INTERVAL_MS. Using default %d\n", updateIntervalMs)
 	}
 
-	c, err := iotdevice.NewModuleFromEnvironment(iotmqtt.New(), true)
+	c, err := iotdevice.NewModuleFromEnvironment(iotmqtt.NewModuleTransport(), true)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -73,5 +74,6 @@ func main() {
 			log.Fatal(err)
 		}
 		time.Sleep(time.Duration(updateIntervalMs) * time.Millisecond)
+		fmt.Printf("Sending value: %d\n", counter)
 	}
 }
