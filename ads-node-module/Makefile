@@ -8,6 +8,7 @@ build:
 
 test:
 	go test ./...
+	
 clean:
 	rm -f ${BIN_DIR}/${NAME}
 
