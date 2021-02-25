@@ -1,0 +1,48 @@
+# ===================================================
+# mounts
+# ===================================================
+mount=mount-ads-node-module-src:
+  bind: "ads-node-module"
+  path: "/src"
+  read-only: false
+
+mount=mount-ads-node-module-bin:
+  bind: "bin/"
+  path: "/install"
+  read-only: false
+
+# ===================================================
+# jobs
+# ===================================================
+
+job=build-ads-node-module:
+  use: image-go-builder
+  command: bash -c 'cd /src && make -j${nproc}'
+  mounts:
+    - mount-ads-node-module-src
+    - mount-ads-node-module-bin
+    - mount-go-pkg
+  sources:
+    - ads-node-module
+  artifact:
+    - bin/ads-node-module
+  user: "{user.uid}:{user.gid}"
+  env:
+    - VERSION={env.GitVersion_Sha}
+    - BIN_DIR=/install
+    - GOCACHE=/tmp/cache
+  annotations:
+    description: "-> build ads-node-module"
+    tags:
+      - build
+
+image=image-ads-node-module:
+  image: "ci4rail/ads-node-module"
+  context: "ads-node-module"
+  dockerfile: Dockerfile
+  tags:
+    - "{env.GitVersion_BranchVersion}"
+  args:
+    VERSION: "{env.GitVersion_Sha}"
+  annotations:
+    description: "-> build ads-node-module docker image"

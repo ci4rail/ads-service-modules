@@ -1,0 +1,23 @@
+# ===================================================
+# mounts
+# ===================================================
+
+mount=mount-project-root:
+  bind: "."
+  path: "/project"
+  read-only: true
+
+mount=mount-go-pkg:
+  bind: "build/go/pkg"
+  path: "/go/pkg"
+  read-only: false
+
+
+# ===================================================
+# images
+# ===================================================
+image=image-go-builder:
+  image: golang
+  pull: once
+  tags:
+    - 1.16-buster

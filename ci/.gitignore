@@ -1,0 +1,4 @@
+credentials.yaml
+config-feature*.yaml
+credentials*.yaml
+!credentials.template.yaml
