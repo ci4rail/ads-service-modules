@@ -16,10 +16,12 @@ limitations under the License.
 
 package message
 
+// Payload is part of a message
 type Payload struct {
 	Counter int `json:"counter"`
 }
 
+// Message to be sent via event
 type Message struct {
 	Timestamp int64   `json:"timestamp"`
 	Payload   Payload `json:"payload"`

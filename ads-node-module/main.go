@@ -65,7 +65,7 @@ func main() {
 				Counter: counter,
 			},
 		}
-		counter += 1
+		counter++
 		j, err := json.Marshal(message)
 		if err != nil {
 			log.Fatal(err)
