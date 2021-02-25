@@ -1,16 +1,9 @@
-parameters:
-  excl: &excl |
-    (?x)(
-      ^kyt-cli/openapidlm/
-    )
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0
     hooks:
       - id: trailing-whitespace
-        exclude: *excl
       - id: end-of-file-fixer
-        exclude: *excl
       - id: check-yaml
       - id: check-added-large-files
   - repo: https://gitlab.com/pycqa/flake8
@@ -22,9 +15,6 @@ repos:
     rev: master
     hooks:
       - id: go-fmt
-        exclude: *excl
       - id: go-lint
       - id: go-imports
-        exclude: *excl
       - id: go-mod-tidy
-        exclude: *excl
