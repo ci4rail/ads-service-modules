@@ -1,3 +1,11 @@
+resource_types:
+  - name: docker-buildx
+    type: docker-image
+    privileged: true
+    source:
+      repository: starkandwayne/docker-buildx-resource
+      tag: edge
+
 resources:
   # Upstream docker images
   - name: image-bb-gitversion-tool
@@ -22,7 +30,7 @@ resources:
 
   # Own docker images
   - name: image-ads-node-module
-    type: docker-image
+    type: docker-buildx
     source:
       repository: ci4rail/ads-node-module
       username: ((registry_user))
@@ -73,10 +81,11 @@ jobs:
                 ROOT=$(pwd)
                 echo {\"VERSION\":\"$(cat gitversion/plain/Sha)\"} > build-args/build-args
 
+
       - put: image-ads-node-module
         params:
           build: source/ads-node-module/
-          dockerfile: source/ads-node-module/Dockerfile
+          buildx_platforms: "linux/amd64,linux/arm64"
+          build_args_file: build-args/build-args
           latest: false
           tag_file: gitversion/plain/InformationalVersion
-          build_args_file: build-args/build-args
