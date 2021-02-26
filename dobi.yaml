@@ -12,6 +12,15 @@ mount=mount-go-pkg:
   path: "/go/pkg"
   read-only: false
 
+mount=mount-docker-config:
+  bind: "~/.docker"
+  path: "/root/.docker"
+  read-only: false
+
+mount=mount-docker-socket:
+  bind: "/var/run/docker.sock"
+  path: "/var/run/docker.sock"
+  read-only: false
 
 # ===================================================
 # images
@@ -21,3 +30,9 @@ image=image-go-builder:
   pull: once
   tags:
     - 1.16-buster
+
+image=dind-buildx:
+  image: jdrouet/docker-with-buildx
+  pull: once
+  tags:
+    - stable

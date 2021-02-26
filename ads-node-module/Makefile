@@ -4,7 +4,7 @@ VERSION ?= $(shell git describe --match=NeVeRmAtCh --always --abbrev=40 --dirty)
 GO_LDFLAGS = -ldflags "-X ads-node-module/internal/message/version.Version=$(VERSION)"
 
 build:
-	GOOS=linux GOARCH=arm64 go build $(GO_LDFLAGS) -o ${BIN_DIR}/${NAME} main.go
+	GOOS=linux go build $(GO_LDFLAGS) -o ${BIN_DIR}/${NAME} main.go
 
 test:
 	go test ./...
