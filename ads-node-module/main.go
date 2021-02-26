@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"ads-node-module/internal/message/version"
+	"ads-node-module/internal/version"
 	"context"
 	"log"
 	"os"
