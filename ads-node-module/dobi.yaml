@@ -44,7 +44,10 @@ job=build-and-push-image-ads-node-module:
     - mount-docker-config
   interactive: true
   command: sh -c "cd /src;
-           docker buildx build --push --platform linux/arm64,linux/amd64 --tag ci4rail/ads-node-module:${VERSION} ."
+           name=$(docker buildx create --use);
+           docker buildx build --push --platform linux/arm64,linux/amd64 --tag ci4rail/ads-node-module:${VERSION} .;
+           docker kill buildx_buildkit_${name}0;
+           docker rm buildx_buildkit_${name}0"
   env:
    - DOCKER_DRIVER=overlay2
    - VERSION={env.GitVersion_BranchVersion}
