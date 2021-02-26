@@ -15,16 +15,8 @@ meta:
 alias=build:
   tasks:
     - build-ads-node-module
-    - image-ads-node-module
+    - build-and-push-image-ads-node-module
   annotations:
-    description: "[alias] build all"
-    tags:
-      - alias
-
-alias=deploy:
-  tasks:
-    - image-ads-node-module:push
-  annotations:
-    description: "[alias] push all"
+    description: "[alias] build (and push) all"
     tags:
       - alias

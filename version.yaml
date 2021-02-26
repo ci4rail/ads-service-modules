@@ -3,7 +3,7 @@
 # ===================================================
 
 mount=mount-gitversion-source-dir:
-  bind: "{fs.projectdir}"
+  bind: "."
   path: /git
   read-only: false # needs to be read/write to work correctly!
 

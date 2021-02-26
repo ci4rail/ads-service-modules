@@ -36,13 +36,15 @@ job=build-ads-node-module:
     tags:
       - build
 
-image=image-ads-node-module:
-  image: "ci4rail/ads-node-module"
-  context: "ads-node-module"
-  dockerfile: Dockerfile
-  tags:
-    - "{env.GitVersion_BranchVersion}"
-  args:
-    VERSION: "{env.GitVersion_Sha}"
-  annotations:
-    description: "-> build ads-node-module docker image"
+job=build-and-push-image-ads-node-module:
+  use: dind-buildx
+  mounts:
+    - mount-ads-node-module-src
+    - mount-docker-socket
+    - mount-docker-config
+  interactive: true
+  command: sh -c "cd /src;
+           docker buildx build --push --platform linux/arm64,linux/amd64 --tag ci4rail/ads-node-module:${VERSION} ."
+  env:
+   - DOCKER_DRIVER=overlay2
+   - VERSION={env.GitVersion_BranchVersion}
