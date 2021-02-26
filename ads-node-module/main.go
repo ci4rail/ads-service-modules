@@ -17,18 +17,18 @@ limitations under the License.
 package main
 
 import (
-	"ads-node-module/internal/message"
-	"ads-node-module/internal/message/version"
+	"ads-node-module/internal/version"
 	"context"
-	"encoding/json"
-	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"strconv"
 	"time"
 
 	"github.com/amenzhinsky/iothub/iotdevice"
 	iotmqtt "github.com/amenzhinsky/iothub/iotdevice/transport/mqtt"
+
+	nats "github.com/nats-io/nats.go"
 )
 
 const (
@@ -49,6 +49,15 @@ func main() {
 		log.Printf("Info: env UPDATE_INTERVAL_MS. Using default %d\n", updateIntervalMs)
 	}
 
+	natsServer := "nats"
+	natsServerEnv := os.Getenv("NATS_SERVER")
+	if len(natsServerEnv) > 0 {
+		natsServer = natsServerEnv
+	}
+
+	opts := []nats.Option{nats.Name("ads-node-module")}
+	opts = setupConnOptions(opts)
+
 	c, err := iotdevice.NewModuleFromEnvironment(iotmqtt.NewModuleTransport(), true)
 	if err != nil {
 		log.Fatal(err)
@@ -57,23 +66,44 @@ func main() {
 	if err = c.Connect(context.Background()); err != nil {
 		log.Fatal(err)
 	}
-	counter := 0
-	for {
-		message := &message.Message{
-			Timestamp: time.Now().Unix(),
-			Payload: message.Payload{
-				Counter: counter,
-			},
-		}
-		counter++
-		j, err := json.Marshal(message)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err = c.SendEvent(context.Background(), j); err != nil {
-			log.Fatal(err)
-		}
-		time.Sleep(time.Duration(updateIntervalMs) * time.Millisecond)
-		fmt.Printf("Sending value: %d\n", counter)
+
+	nc, err := nats.Connect(natsServer, opts...)
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	_, err = nc.Subscribe("service.location", func(msg *nats.Msg) {
+		if err = c.SendEvent(context.Background(), msg.Data); err != nil {
+			log.Fatal(err)
+		}
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	nc.Flush()
+	if err := nc.LastError(); err != nil {
+		log.Fatal(err)
+	}
+
+	runtime.Goexit()
+}
+
+func setupConnOptions(opts []nats.Option) []nats.Option {
+	totalWait := 10 * time.Minute
+	reconnectDelay := time.Second
+
+	opts = append(opts, nats.ReconnectWait(reconnectDelay))
+	opts = append(opts, nats.MaxReconnects(int(totalWait/reconnectDelay)))
+	opts = append(opts, nats.DisconnectErrHandler(func(nc *nats.Conn, err error) {
+		log.Printf("Disconnected due to:%s, will attempt reconnects for %.0fm", err, totalWait.Minutes())
+	}))
+	opts = append(opts, nats.ReconnectHandler(func(nc *nats.Conn) {
+		log.Printf("Reconnected [%s]", nc.ConnectedUrl())
+	}))
+	opts = append(opts, nats.ClosedHandler(func(nc *nats.Conn) {
+		log.Fatalf("Exiting: %v", nc.LastError())
+	}))
+	return opts
 }
