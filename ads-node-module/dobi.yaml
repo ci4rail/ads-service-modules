@@ -51,3 +51,7 @@ job=build-and-push-image-ads-node-module:
   env:
    - DOCKER_DRIVER=overlay2
    - VERSION={env.GitVersion_BranchVersion}
+  annotations:
+    description: "-> builds and pushes ads-node-module multiarch docker images"
+    tags:
+      - build

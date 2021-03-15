@@ -33,6 +33,7 @@ import (
 
 const (
 	defaultUpdateIntervalMs int = 1000
+	connectTimeoutSeconds   int = 30
 )
 
 func main() {
@@ -55,25 +56,49 @@ func main() {
 		natsServer = natsServerEnv
 	}
 
-	opts := []nats.Option{nats.Name("ads-node-module")}
+	iothubChan := make(chan *iotdevice.ModuleClient)
+	go func() {
+		c, err := iotdevice.NewModuleFromEnvironment(iotmqtt.NewModuleTransport(), true)
+		if err != nil {
+			log.Fatal(err)
+		}
+		for i := 0; i < connectTimeoutSeconds; i++ {
+			if err = c.Connect(context.Background()); err != nil {
+				log.Printf("Connect failed: %s\n", err)
+				log.Println("Reconnecting to 'edgeHub'")
+			} else {
+				log.Println("Connected to 'edgeHub'")
+				iothubChan <- c
+				return
+			}
+			time.Sleep(time.Second)
+		}
+	}()
+
+	opts := []nats.Option{nats.Name("ads-node-module"), nats.Timeout(time.Duration(connectTimeoutSeconds) * time.Second)}
 	opts = setupConnOptions(opts)
 
-	c, err := iotdevice.NewModuleFromEnvironment(iotmqtt.NewModuleTransport(), true)
-	if err != nil {
-		log.Fatal(err)
-	}
+	ncChan := make(chan *nats.Conn)
+	go func() {
+		for i := 0; i < connectTimeoutSeconds; i++ {
+			nc, err := nats.Connect(natsServer, opts...)
+			if err != nil {
+				log.Printf("Connect failed: %s\n", err)
+				log.Printf("Reconnecting to '%s'\n", natsServer)
+			} else {
+				log.Printf("Connected to '%s'\n", natsServer)
+				ncChan <- nc
+				return
+			}
+			time.Sleep(time.Second)
+		}
+	}()
 
-	if err = c.Connect(context.Background()); err != nil {
-		log.Fatal(err)
-	}
+	c := <-iothubChan
+	nc := <-ncChan
 
-	nc, err := nats.Connect(natsServer, opts...)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_, err = nc.Subscribe("service.location", func(msg *nats.Msg) {
-		if err = c.SendEvent(context.Background(), msg.Data); err != nil {
+	_, err := nc.Subscribe("service.location", func(msg *nats.Msg) {
+		if err := c.SendEvent(context.Background(), msg.Data); err != nil {
 			log.Fatal(err)
 		}
 	})
