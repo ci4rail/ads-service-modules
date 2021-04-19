@@ -18,8 +18,8 @@ modules:
     startupOrder: 1
 ```
 
-Deploy the manifest using the kyt-cli
+Deploy the manifest using the edgefarm-cli
 
 ```sh
-$ kyt alm apply -f myapplication.yaml
+$ edgefarm alm apply -f myapplication.yaml
 ```
