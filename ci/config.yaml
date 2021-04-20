@@ -7,8 +7,10 @@ name: ads-service-modules
 # Git configuration
 # -----------------
 ## Specify the git repository to work with
-git_source: https://github.com/ci4rail/ads-service-modules.git
-## Specify the git branch to work with
+git_source: https://github.com/edgefarm/ads-service-modules.git
+## Specify the git default branch
+git_default_branch: main
+## Specify the git branch to work with - possible to differ from git_default_branch
 git_branch: main
 ## This enables/disables ssl verification of the git resource
 git_skip_ssl_verification: false
