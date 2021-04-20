@@ -1,0 +1,146 @@
+resource_types:
+  - name: docker-buildx
+    type: docker-image
+    privileged: true
+    source:
+      repository: starkandwayne/docker-buildx-resource
+      tag: edge
+
+  - name: pull-request
+    type: docker-image
+    source:
+      repository: teliaoss/github-pr-resource
+
+resources:
+  - name: pull-request
+    type: pull-request
+    check_every: 30s
+    webhook_token: ((webhook_token))
+    source:
+      repository: ci4rail/ads-service-modules
+      access_token: ((access_token))
+
+  - name: image-golang
+    type: docker-image
+    source:
+      repository: golang
+      tag: 1.16-buster
+
+  - name: image-ads-node-module-harbor-dev
+    type: docker-buildx
+    source:
+      repository: harbor.ci4rail.com/edgefarm-dev/ads-node-module
+      username: ((harbor_registry_user))
+      password: ((harbor_registry_password))
+
+  - name: image-bb-gitversion-tool
+    type: docker-image
+    source:
+      repository: elbb/bb-gitversion
+      tag: 0.8.3
+
+  - name: image-busybox
+    type: docker-image
+    source:
+      repository: busybox
+      tag: 1.33.0
+
+jobs:
+  - name: build
+    plan:
+      - get: pull-request
+        trigger: true
+        version: every
+
+      - put: pull-request
+        params:
+          path: pull-request
+          status: pending
+
+      - in_parallel:
+          - get: image-bb-gitversion-tool
+          - get: image-golang
+          - get: image-busybox
+
+      - task: generate-version
+        image: image-bb-gitversion-tool
+        config:
+          platform: linux
+          inputs:
+            - name: pull-request
+          outputs:
+            - name: gitversion
+          run:
+            path: /bin/bash
+            args:
+              - -exc
+              - |
+                entrypoint.sh &&
+                jq empty gitversion/json/gitversion.json &&
+                cat gitversion/json/gitversion.json
+          params:
+            GIT_PATH: pull-request
+            GEN_PATH: gitversion
+            DEFAULT_BRANCH: ((git_default_branch))
+            GIT_BRANCH: ((git_default_branch))
+
+      - task: generate-build-args-for-images
+        image: image-busybox
+        config:
+          platform: linux
+          inputs:
+            - name: gitversion
+          outputs:
+            - name: build-args
+          run:
+            path: /bin/sh
+            args:
+              - -ec
+              - |
+                ROOT=$(pwd)
+                echo {\"VERSION\":\"$(cat gitversion/plain/Sha)\"} > build-args/build-args
+          on_failure:
+          put: pull-request
+          params:
+            path: pull-request
+            status: failure
+
+      - in_parallel:
+        - task: build-ads-node-module
+          image: image-golang
+          config:
+            platform: linux
+            inputs:
+              - name: pull-request
+            run:
+              path: /bin/bash
+              args:
+                - -ec
+                - |
+                  ROOT=$(pwd)
+                  cd ${ROOT}/pull-request/ads-node-module
+                  make test
+                  make
+          on_failure:
+            put: pull-request
+            params:
+              path: pull-request
+              status: failure
+
+        - put: image-ads-node-module-harbor-dev
+          params:
+            build: pull-request/ads-node-module/
+            buildx_platforms: "linux/amd64,linux/arm64"
+            build_args_file: build-args/build-args
+            latest: false
+            tag_file: gitversion/plain/ShortSha
+          on_failure:
+            put: pull-request
+            params:
+              path: pull-request
+              status: failure
+
+      - put: pull-request
+        params:
+          path: pull-request
+          status: success
