@@ -1,6 +1,6 @@
 # ads-service-modules
 
-[![CI](https://concourse.ci4rail.com/api/v1/teams/main/pipelines/ads-service-modules/jobs/build-ads-service-modules/badge)](https://concourse.ci4rail.com/teams/main/pipelines/ads-service-modules) [![Go Report Card](https://goreportcard.com/badge/github.com/ci4rail/ads-service-modules)](https://goreportcard.com/badge/github.com/ci4rail/ads-service-modules)
+[![CI](https://concourse.ci4rail.com/api/v1/teams/edgefarm/pipelines/ads-service-modules/jobs/build-ads-service-modules/badge)](https://concourse.ci4rail.com/teams/edgefarm/pipelines/ads-service-modules) [![Go Report Card](https://goreportcard.com/badge/github.com/ci4rail/ads-service-modules)](https://goreportcard.com/badge/github.com/ci4rail/ads-service-modules)
 
 # Local build with dobi
 
