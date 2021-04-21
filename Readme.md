@@ -10,7 +10,7 @@ Make sure that you manually run `docker login` for user `ci4rail` on your host s
 
 Make sure that you are logged in to team `edgefarm` in Concourse.
 ```bash
-$ fly -t prod login -n edgefarm
+$ fly -t prod login -n edgefarm -c https://concourse.ci4rail.com
 ```
 
 ## pipeline.yaml
