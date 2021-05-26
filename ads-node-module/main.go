@@ -97,7 +97,7 @@ func main() {
 	c := <-iothubChan
 	nc := <-ncChan
 
-	_, err := nc.Subscribe("service.location", func(msg *nats.Msg) {
+	_, err := nc.Subscribe("ads", func(msg *nats.Msg) {
 		if err := c.SendEvent(context.Background(), msg.Data); err != nil {
 			log.Fatal(err)
 		}
